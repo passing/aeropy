@@ -174,7 +174,7 @@ arguments:
 Identified repetitions are turned into loops and sub-sequences.
 The resulting light sequences are identical to the original ones.
 
-### ramp compression
+#### ramp compression
 
 arguments:
 ```
