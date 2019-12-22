@@ -141,25 +141,31 @@ class TestArguments(unittest.TestCase):
 
 
 class TestLightObject(unittest.TestCase):
+    color_pre = Color(10, 20, 30)
+
     def test_light_object_color(self):
         c = LightCommandColor(arguments=Arguments([1, 2, 3]), noop=" ; comment")
         self.assertEqual(c.get_duration(), 0)
         self.assertEqual(c.export(), "color (1, 2, 3) ; comment")
+        self.assertEqual(c._render_connected(self.color_pre, None), ([], Color(1, 2, 3)))
 
     def test_light_object_delay(self):
         d = LightCommandDelay(arguments=Arguments([1]), noop=" ; comment")
         self.assertEqual(d.get_duration(), 1)
         self.assertEqual(d.export(), "delay (1) ; comment")
+        self.assertEqual(d._render_connected(self.color_pre, None), ([self.color_pre], self.color_pre))
 
     def test_light_object_ramp(self):
-        r = LightCommandRamp(arguments=Arguments([1, 2, 3, 4]), noop=" ; comment")
+        r = LightCommandRamp(arguments=Arguments([110, 120, 130, 4]), noop=" ; comment")
         self.assertEqual(r.get_duration(), 4)
-        self.assertEqual(r.export(), "ramp (1, 2, 3, 4) ; comment")
+        self.assertEqual(r.export(), "ramp (110, 120, 130, 4) ; comment")
+        self.assertEqual(r._render_connected(self.color_pre, None), ([Color(35, 45, 55), Color(60, 70, 80), Color(85, 95, 105), Color(110, 120, 130)], Color(110, 120, 130)))
 
     def test_light_object_noop(self):
         n = LightCommandNoop(noop="; comment")
         self.assertEqual(n.get_duration(), 0)
         self.assertEqual(n.export(), "; comment")
+        self.assertEqual(n._render_connected(self.color_pre, None), ([], self.color_pre))
 
     def test_light_object_sub(self):
         d = LightCommandDelay(arguments=Arguments([1]), noop=" ; comment")

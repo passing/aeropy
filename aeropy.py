@@ -110,6 +110,9 @@ class Color():
         self.green = green
         self.blue = blue
 
+    def __repr__(self):
+        return "Color({}, {}, {})".format(self.red, self.green, self.blue)
+
     def __add__(self, other):
         return Color(self.red + other.red, self.green + other.green, self.blue + other.blue)
 
