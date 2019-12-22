@@ -226,10 +226,12 @@ The `-png-padding` option controls the space between the bars.
 
 examples:
 
-Demo sequence rendered with `-png-resolution 7`
+Demo sequence rendered with `-png-resolution 7`:
+
 ![Demo 1](demo/demo1.png)
 
-The same sequence, rendered with `-png-resolution 8`
+The same sequence, rendered with `-png-resolution 8`:
+
 ![Demo 2](demo/demo2.png)
 
 #### video rendering
