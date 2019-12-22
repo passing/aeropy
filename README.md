@@ -235,13 +235,21 @@ dependencies:
 
 arguments:
 ```
--video FILE [-video-audio FILE] [-video-fps FPS] [-video-start-seconds SECONDS] [-video-width WIDTH] [-video-height HEIGHT] [-video-window WINDOW] [-video-bar-width WIDTH] [-video-preset {slow,medium,fast,faster,veryfast,superfast,ultrafast}]
+-video FILE 
+[-video-audio FILE] 
+[-video-fps FPS] 
+[-video-start-seconds SECONDS] 
+[-video-width WIDTH] 
+[-video-height HEIGHT] 
+[-video-window WINDOW] 
+[-video-bar-width WIDTH] 
+[-video-preset {slow,medium,fast,faster,veryfast,superfast,ultrafast}]
 ```
 
 The light sequences get rendered as a video with one vertical bar for each sequence.
 In each frame, the colors of `-video-window` hundredth seconds will be drawn one above the other.
 Setting `-video-window` to 1 will cause just one color to be shown at a time in each bar.
-When choosing a higher value like 200 (2 seconds) will result in a nice panning effect.
+Choosing a higher value like 200 (2 seconds) will result in a nice panning effect.
 
 Use the `-video-audio` option to let ffmpeg copy an mp3 file into the resulting video.
 You can choose to start rendering at a defined time with the `-video-start-seconds` option.
