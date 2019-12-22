@@ -193,9 +193,7 @@ The biggest possible distance between two colors is 442 (from black to white, re
 
 arguments:
 ```
--output BASENAME
--syntax {legacy,british,camel,call}
--tab SPACES
+-output BASENAME [-syntax {legacy,british,camel,call}] [-tab SPACES]
 ```
 
 Write sequences to numbered files.
@@ -216,10 +214,7 @@ Colors with a low lightness will get brighter, which trying to simulate their ac
 
 arguments:
 ```
--png FILE
--png-resolution RESOLUTION
--png-stretch STRETCH
--png-padding PADDING
+-png FILE [-png-resolution RESOLUTION] [-png-stretch STRETCH] [-png-padding PADDING]
 ```
 
 The light sequences get rendered to an image file.
@@ -240,15 +235,7 @@ dependencies:
 
 arguments:
 ```
--video FILE
--video-audio FILE
--video-fps FPS
--video-start-seconds SECONDS
--video-width WIDTH
--video-height HEIGHT
--video-window WINDOW
--video-bar-width WIDTH
--video-preset {slow,medium,fast,faster,veryfast,superfast,ultrafast}
+-video FILE [-video-audio FILE] [-video-fps FPS] [-video-start-seconds SECONDS] [-video-width WIDTH] [-video-height HEIGHT] [-video-window WINDOW] [-video-bar-width WIDTH] [-video-preset {slow,medium,fast,faster,veryfast,superfast,ultrafast}]
 ```
 
 The light sequences get rendered as a video with one vertical bar for each sequence.
