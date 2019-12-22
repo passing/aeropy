@@ -224,6 +224,14 @@ In each bar, pixels from `-png-resolution` hundredth seconds are put into the sa
 The resulting image can be stretched vertically using the `-png-stretch` option.  
 The `-png-padding` option controls the space between the bars.
 
+examples:
+
+Demo sequence rendered with `-png-resolution 7`
+![Demo 1](demo/demo1.png)
+
+The same sequence, rendered with `-png-resolution 8`
+![Demo 2](demo/demo2.png)
+
 #### video rendering
 
 the script creates a video (using ffmpeg), simulating the exact time flow of the light sequences.
