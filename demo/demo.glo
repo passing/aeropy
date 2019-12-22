@@ -1,0 +1,70 @@
+SUB, white_up_down
+
+<1>
+RAMP, 255, 0, 0, 100
+RAMP, 0, 0, 0, 100
+<2>
+RAMP, 0, 255, 0, 100
+RAMP, 0, 0, 0, 100
+<3>
+RAMP, 0, 0, 255, 100
+RAMP, 0, 0, 0, 100
+<end>
+
+SUB, shift
+SUB, white_up_down
+SUB, unshift
+
+L, 5
+D, 10
+L, 20
+SUB, variable_color
+D, 1
+C, 0, 0, 0
+D, 1
+C, 255, 255, 255
+D, 1
+C, 0, 0, 0
+D, 1
+E
+D, 10
+E
+
+SUB, white_up_down
+
+END
+
+DEFSUB, white_up_down
+D, 10
+RAMP, 255, 255, 255, 100
+RAMP, 0, 0, 0, 100
+D, 10
+ENDSUB
+
+DEFSUB, shift
+<1>
+<2>
+D, 50
+<3>
+D, 100
+<end>
+ENDSUB
+
+DEFSUB, unshift
+<1>
+D, 100
+<2>
+D, 50
+<3>
+<end>
+ENDSUB
+
+DEFSUB, variable_color
+<1>
+C, 255, 0, 0
+<2>
+C, 0, 255, 0
+<3>
+C, 0, 0, 255
+<end>
+ENDSUB

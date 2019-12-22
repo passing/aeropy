@@ -1,0 +1,45 @@
+sub (white_up_down)
+
+ramp (0, 0, 255, 100)
+ramp (0, 0, 0, 100)
+
+sub (shift)
+sub (white_up_down)
+sub (unshift)
+
+loop (5)
+  delay (10)
+  loop (20)
+    sub (variable_color)
+    delay (1)
+    color (0, 0, 0)
+    delay (1)
+    color (255, 255, 255)
+    delay (1)
+    color (0, 0, 0)
+    delay (1)
+  endloop
+  delay (10)
+endloop
+
+sub (white_up_down)
+
+end
+
+defsub (white_up_down)
+  delay (10)
+  ramp (255, 255, 255, 100)
+  ramp (0, 0, 0, 100)
+  delay (10)
+endsub
+
+defsub (shift)
+  delay (100)
+endsub
+
+defsub (unshift)
+endsub
+
+defsub (variable_color)
+  color (0, 0, 255)
+endsub
