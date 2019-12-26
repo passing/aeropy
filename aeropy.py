@@ -139,7 +139,7 @@ class Color():
         )
 
     def distance(self, other):
-        return math.sqrt(pow(self.red - other.red, 2) + pow(self.green - other.green, 2) + pow(self.blue - other.blue, 2))
+        return round(math.sqrt(pow(self.red - other.red, 2) + pow(self.green - other.green, 2) + pow(self.blue - other.blue, 2)), 4)
 
     def get_rgb(self, amplify=False):
         if amplify:
@@ -160,6 +160,9 @@ class Arguments():
 
     def __hash__(self):
         return hash(tuple(self._expand()))
+
+    def __eq__(self, other):
+        return self._expand() == other._expand()
 
     def __str__(self):
         if self.name is not None:
@@ -213,6 +216,9 @@ class LightCommand:
 
     def __hash__(self):
         return hash((self.name, self.arguments))
+
+    def __eq__(self, other):
+        return type(self) == type(other) and self.arguments == other.arguments
 
     def get_duration(self, root=None):
         return 0
@@ -350,9 +356,7 @@ class LightCommandDelay(LightCommand):
         if d > 0 and d <= self.max_duration:
             return [self]
         else:
-            noop = f'; DELAY RESOLVE: {self.get_duration()}'
-            if self.noop:
-                noop += self.noop
+            noop = f'; DELAY RESOLVE: {self.get_duration()}' + (self.noop or '')
             commands = [LightCommandNoop(noop=noop)]
             while d > 0:
                 commands.append(LightCommandDelay(arguments=Arguments([min(d, self.max_duration)])))
@@ -403,6 +407,7 @@ class LightCommandRamp(LightCommandColor):
     name = 'ramp'
     command_variants = {'legacy': 'RAMP', 'default': 'ramp'}
     valid_arguments = ((int, int, int, int),)
+    max_duration = 65535
 
     def get_duration(self, root=None):
         return self.arguments[3]
@@ -414,6 +419,13 @@ class LightCommandRamp(LightCommandColor):
         for n in range(duration):
             colors.append(round(color_pre * (1 - ((n + 1) / duration)) + color * ((n + 1) / duration)))
         return colors, color
+
+    def _resolve_unsupported(self):
+        d = self.get_duration()
+        if d > 0 and d <= self.max_duration:
+            return [self]
+        else:
+            error(f'resolving {self.name} with duration {d} (max = {self.max_duration}) not implemented')
 
 
 class LightCommandSub(LightCommand):
@@ -540,9 +552,9 @@ class LightSequence(list, LightCommand):
         old_len = len(self)
         self._compress_adjacent_delays()
         if old_len != len(self):
-            print(f'compressed adjecent delays (old length: {old_len}, new length: {len(self)})')
+            print(f'compressed adjacent delays (old length: {old_len}, new length: {len(self)})')
 
-        if all(isinstance(o, LightCommandRamp) for o in self) and len(self) > 2:
+        if isinstance(self[0], (LightCommandColor, LightCommandRamp)) and all(isinstance(o, LightCommandRamp) for o in self[1:]) and len(self) > 2:
             old_len = len(self)
             self._compress_douglas_peucker(0, len(self) - 1, options['epsilon'])
             if old_len != len(self):
@@ -698,7 +710,7 @@ class LightSequence(list, LightCommand):
         d_max = 0
         pos_max = 0
 
-        if epsilon >= 0 and pos_last - pos_first > 2:
+        if epsilon >= 0 and pos_last - pos_first >= 2:
             for i in range(pos_first + 1, pos_last):
                 time += self[i].get_duration()
                 c_interpolated = (c_first * (1 - (time / duration)) + c_last * (time / duration))
@@ -751,10 +763,7 @@ class LightSequenceLoop(LightSequence):
 
     def _loop_unfold(self):
         factor_1, factor_2, rest = self._calculate_factors(number=self._count(), max_number=self.max_count)
-        noop = f'; LOOP UNFOLD: {factor_1} * {factor_2} + {rest} = {self._count()}'
-        if self.noop:
-            noop += self.noop
-
+        noop = f'; LOOP UNFOLD: {factor_1} * {factor_2} + {rest} = {self._count()}' + (self.noop or '')
         commands = LightSequenceLoop(objects=[LightSequenceLoop(objects=self, arguments=Arguments([factor_2]))], arguments=Arguments([factor_1]), noop=noop)._resolve_unsupported()
         if rest > 0:
             commands.append(LightSequenceLoop(objects=self, arguments=Arguments([rest])))
