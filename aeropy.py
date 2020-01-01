@@ -1010,23 +1010,26 @@ class GloList(list):
         o = []
 
         color_pre = None
-        delay_repeat = 0
+        delay_repeat = 1
 
         for i in range(0, len(row), 3):
             color = tuple(row[i: i + 3])
 
             if i == 0:
                 o.append(LightCommandColor(arguments=Arguments(color)))
-            if color == color_pre:
-                if delay_repeat > 0:
+            elif color == color_pre:
+                if delay_repeat > 1:
                     o.pop()
-                delay_repeat += 1
                 o.append(LightCommandRamp(arguments=Arguments(color + (delay_repeat,))))
+                delay_repeat += 1
             else:
-                delay_repeat = 0
+                delay_repeat = 1
                 o.append(LightCommandRamp(arguments=Arguments(color + (1,))))
+                color_pre = color
 
-            color_pre = color
+        if delay_repeat > 1:
+            o.pop()
+        o.append(LightCommandRamp(arguments=Arguments(color + (delay_repeat,))))
 
         return o
 
