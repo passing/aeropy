@@ -685,7 +685,7 @@ class LightSequence(list, LightCommand):
 
                 arguments = Arguments([f's{hash(ngram_hash) % 1000000:06}'])
                 sub = LightCommandSub(arguments=arguments, noop='; COMPRESSED')
-                ds = LightSequenceDefsub(arguments=arguments, objects=ngram, noop='; COMPRESSED')
+                ds = LightSequenceDefsub(arguments=arguments, objects=ngram, noop='; COMPRESSED ({})'.format(positions_total))
                 root.append(ds)
 
                 pos_adjust = 0
@@ -713,22 +713,27 @@ class LightSequence(list, LightCommand):
                 color_pre = self[index]._color()
             elif isinstance(self[index], LightCommandColor):
                 if color_pre is not None:
-                    duration = 0
-                    # color followed by delay
-                    if index + 1 < len(self) and isinstance(self[index + 1], LightCommandDelay):
-                        delay_duration = self[index + 1].get_duration()
-                        if delay_duration > 0:
-                            duration = 1
-                            self[index + 1] = LightCommandDelay(arguments=Arguments([delay_duration - 1]), noop=self[index + 1].noop or '')
-                    self[index] = LightCommandRamp(arguments=Arguments(list(self[index]._color().get_rgb()) + [duration]), noop=self[index].noop or '')
+                    self[index] = LightCommandRamp(arguments=Arguments(list(self[index]._color().get_rgb()) + [0]), noop=self[index].noop)
                 color_pre = self[index]._color()
             elif isinstance(self[index], LightCommandDelay):
                 delay_duration = self[index].get_duration()
-                if delay_duration == 0:
+                if delay_duration > 0:
+                    if color_pre is not None:
+                        # delay followed by color
+                        if index + 1 < len(self) and isinstance(self[index + 1], LightCommandColor):
+                            color = self[index + 1]._color()
+                            if delay_duration > 1:
+                                self[index] = LightCommandRamp(arguments=Arguments(list(color_pre.get_rgb()) + [delay_duration - 1]), noop=self[index].noop)
+                                index += 1
+                            else:
+                                self.pop(index)
+                            self[index] = LightCommandRamp(arguments=Arguments(list(color.get_rgb()) + [1]), noop=self[index].noop)
+                            color_pre = color
+                        else:
+                            self[index] = LightCommandRamp(arguments=Arguments(list(color_pre.get_rgb()) + [delay_duration]), noop=self[index].noop)
+                else:
                     self.pop(index)
                     index -= 1
-                elif color_pre is not None:
-                    self[index] = LightCommandRamp(arguments=Arguments(list(color_pre.get_rgb()) + [delay_duration]), noop=self[index].noop or '')
             else:
                 color_pre = None
             index += 1
@@ -741,12 +746,12 @@ class LightSequence(list, LightCommand):
                 color = self[index]._color()
                 duration = self[index].get_duration()
                 if color_pre is not None and color == color_pre:
-                    self[index] = LightCommandDelay(arguments=Arguments([duration]), noop=self[index].noop or '')
+                    self[index] = LightCommandDelay(arguments=Arguments([duration]), noop=self[index].noop)
                 elif duration == 0:
-                    self[index] = LightCommandColor(arguments=Arguments(list(color.get_rgb())), noop=self[index].noop or '')
+                    self[index] = LightCommandColor(arguments=Arguments(list(color.get_rgb())), noop=self[index].noop)
                 elif duration == 1:
-                    self[index] = LightCommandColor(arguments=Arguments(list(color.get_rgb())), noop=self[index].noop or '')
-                    self.insert(index + 1, LightCommandDelay(arguments=Arguments([duration])))
+                    self[index] = LightCommandDelay(arguments=Arguments([duration]))
+                    self.insert(index + 1, LightCommandColor(arguments=Arguments(list(color.get_rgb())), noop=self[index].noop))
                     index += 1
                 color_pre = color
             elif isinstance(self[index], LightCommandColor):
@@ -755,13 +760,9 @@ class LightSequence(list, LightCommand):
                 pass
             else:
                 color_pre = None
-            # merge adjacent delays
-            if index > 0 and isinstance(self[index], LightCommandDelay) and isinstance(self[index - 1], LightCommandDelay):
-                duration = self[index - 1].get_duration() + self[index].get_duration()
-                self[index - 1] = LightCommandDelay(arguments=Arguments([duration]))
-                self.pop(index)
-                index -= 1
             index += 1
+
+        self._compress_adjacent_delays()
 
     def _compress_douglas_peucker(self, pos_first, pos_last, epsilon):
         c_first = self[pos_first]._color()
@@ -785,7 +786,7 @@ class LightSequence(list, LightCommand):
                 arguments = Arguments(self[pos_last].arguments._expand()[0: 3] + [duration])
                 for i in range(pos_first, pos_last):
                     self.pop(pos_first + 1)
-                self.insert(pos_first + 1, LightCommandRamp(arguments=arguments, noop=" ; COMPRESSED"))
+                self.insert(pos_first + 1, LightCommandRamp(arguments=arguments, noop=" ; COMPRESSED (e_max={:.2f})".format(d_max)))
             else:
                 # start with last part as list indexes could otherwise be wrong
                 self._compress_douglas_peucker(pos_max, pos_last, epsilon)
