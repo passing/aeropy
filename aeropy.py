@@ -720,7 +720,7 @@ class LightSequence(list, LightCommand):
                 if delay_duration > 0:
                     if color_pre is not None:
                         # delay followed by color
-                        if index + 1 < len(self) and isinstance(self[index + 1], LightCommandColor):
+                        if index + 1 < len(self) and isinstance(self[index + 1], LightCommandColor) and not isinstance(self[index + 1], LightCommandRamp):
                             color = self[index + 1]._color()
                             if delay_duration > 1:
                                 self[index] = LightCommandRamp(arguments=Arguments(list(color_pre.get_rgb()) + [delay_duration - 1]), noop=self[index].noop)
