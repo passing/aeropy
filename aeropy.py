@@ -422,7 +422,9 @@ class LightCommandRamp(LightCommandColor):
 
     def _resolve_unsupported(self):
         d = self.get_duration()
-        if d > 0 and d <= self.max_duration:
+        if d == 0:
+            return [LightCommandColor(arguments=Arguments(list(self._color().get_rgb())), noop=(self.noop or '') + ' ; RESOLVED')]
+        elif d <= self.max_duration:
             return [self]
         else:
             error(f'resolving {self.name} with duration {d} (max = {self.max_duration}) not implemented')
@@ -554,13 +556,15 @@ class LightSequence(list, LightCommand):
         if old_len != len(self):
             print(f'compressed adjacent delays (old length: {old_len}, new length: {len(self)})')
 
-        if isinstance(self[0], (LightCommandColor, LightCommandRamp)) and all(isinstance(o, LightCommandRamp) for o in self[1:]) and len(self) > 2:
+        if len(self) > 2 and isinstance(self[0], (LightCommandColor, LightCommandRamp)) and all(isinstance(o, (LightCommandDelay, LightCommandColor, LightCommandRamp)) for o in self[1:]):
+            self._convert_to_ramps()
             old_len = len(self)
             self._compress_douglas_peucker(0, len(self) - 1, options['epsilon'])
             if old_len != len(self):
                 print(f'compressed ramp sequence (old length: {old_len}, new length: {len(self)}, epsilon: {options["epsilon"]})')
+            self._convert_from_ramps()
 
-        if all(isinstance(o, (LightCommandColor, LightCommandDelay, LightCommandRamp, LightCommandSub)) for o in self) and len(self) > 2:
+        if len(self) > 2 and all(isinstance(o, (LightCommandDelay, LightCommandColor, LightCommandRamp, LightCommandSub)) for o in self):
             old_len = len(self)
             self._compress_repeat(options['root'])
             if old_len != len(self):
@@ -700,6 +704,64 @@ class LightSequence(list, LightCommand):
 
             else:
                 return
+
+    def _convert_to_ramps(self):
+        color_pre = None
+        index = 0
+        while index < len(self):
+            if isinstance(self[index], LightCommandRamp):
+                color_pre = self[index]._color()
+            elif isinstance(self[index], LightCommandColor):
+                if color_pre is not None:
+                    duration = 0
+                    # color followed by delay
+                    if index + 1 < len(self) and isinstance(self[index + 1], LightCommandDelay):
+                        delay_duration = self[index + 1].get_duration()
+                        if delay_duration > 0:
+                            duration = 1
+                            self[index + 1] = LightCommandDelay(arguments=Arguments([delay_duration - 1]), noop=self[index + 1].noop or '')
+                    self[index] = LightCommandRamp(arguments=Arguments(list(self[index]._color().get_rgb()) + [duration]), noop=self[index].noop or '')
+                color_pre = self[index]._color()
+            elif isinstance(self[index], LightCommandDelay):
+                delay_duration = self[index].get_duration()
+                if delay_duration == 0:
+                    self.pop(index)
+                    index -= 1
+                elif color_pre is not None:
+                    self[index] = LightCommandRamp(arguments=Arguments(list(color_pre.get_rgb()) + [delay_duration]), noop=self[index].noop or '')
+            else:
+                color_pre = None
+            index += 1
+
+    def _convert_from_ramps(self):
+        color_pre = None
+        index = 0
+        while index < len(self):
+            if isinstance(self[index], LightCommandRamp):
+                color = self[index]._color()
+                duration = self[index].get_duration()
+                if color_pre is not None and color == color_pre:
+                    self[index] = LightCommandDelay(arguments=Arguments([duration]), noop=self[index].noop or '')
+                elif duration == 0:
+                    self[index] = LightCommandColor(arguments=Arguments(list(color.get_rgb())), noop=self[index].noop or '')
+                elif duration == 1:
+                    self[index] = LightCommandColor(arguments=Arguments(list(color.get_rgb())), noop=self[index].noop or '')
+                    self.insert(index + 1, LightCommandDelay(arguments=Arguments([duration])))
+                    index += 1
+                color_pre = color
+            elif isinstance(self[index], LightCommandColor):
+                color_pre = self[index]._color()
+            elif isinstance(self[index], LightCommandDelay):
+                pass
+            else:
+                color_pre = None
+            # merge adjacent delays
+            if index > 0 and isinstance(self[index], LightCommandDelay) and isinstance(self[index - 1], LightCommandDelay):
+                duration = self[index - 1].get_duration() + self[index].get_duration()
+                self[index - 1] = LightCommandDelay(arguments=Arguments([duration]))
+                self.pop(index)
+                index -= 1
+            index += 1
 
     def _compress_douglas_peucker(self, pos_first, pos_last, epsilon):
         c_first = self[pos_first]._color()
@@ -917,7 +979,7 @@ class GloList(list):
                 file_objects = self._split_file(files[f], split_number)
                 for n in range(split_number):
                     glo = self._import_glo(file_objects[n])
-                    glo.add_namespace(f'G{f}_')
+                    glo.add_namespace("G{:02}_".format(f + 1))
                     if f == 0:
                         self.append(glo)
                     else:
@@ -935,7 +997,7 @@ class GloList(list):
         i = 1
 
         for row in rows:
-            sub_name = f'image_{filename}_{i:02}'
+            sub_name = "image_{}_{:02}".format(filename.replace('.','_'), i)
             i += 1
             o = []
 
@@ -946,6 +1008,8 @@ class GloList(list):
                 color = (row[c * 3], row[c * 3 + 1], row[c * 3 + 2])
 
                 if ramps:
+                    if c == 0:
+                        o.append(LightCommandColor(arguments=Arguments(color)))
                     if color == color_pre:
                         if delay_repeat > 0:
                             o.pop()
@@ -1292,7 +1356,7 @@ if __name__ == '__main__':
     group_output.add_argument('-output', help='output file basename', dest='output_file', metavar='BASENAME')
     group_output.add_argument('-resolve', help='resolve constants', dest='resolve_constants', action='store_true')
     group_output.add_argument('-compress', help='compress command sequences', dest='compress', action='store_true')
-    group_output.add_argument('-epsilon', help='maximum color distance for ramp compression', dest='compress_epsilon', type=float, default=1, metavar='DISTANCE')
+    group_output.add_argument('-epsilon', help='maximum color distance for ramp compression', dest='compress_epsilon', type=float, default=1.0, metavar='DISTANCE')
     group_output.add_argument('-unsupported', help='resolve unsupported commands', dest='resolve_unsupported', action='store_true')
     group_output.add_argument('-syntax', help='command syntax to use', dest='syntax', nargs="+", default=[], choices=['legacy', 'british', 'camel', 'call'])
     group_output.add_argument('-tab', help='indention characters', dest='indent', type=int, default=2, metavar='SPACES')

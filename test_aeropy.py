@@ -352,6 +352,19 @@ class Test_get_slices(unittest.TestCase):
 class Test_compress(unittest.TestCase):
     def test_compress_ramp_1(self):
         m1 = LightSequenceMain(objects=[
+            LightCommandColor(arguments=Arguments([0, 0, 0])),
+            LightCommandRamp(arguments=Arguments([85, 50, 20, 10])),
+            LightCommandRamp(arguments=Arguments([170, 100, 40, 10]))
+        ])
+        m2 = LightSequenceMain(objects=[
+            LightCommandColor(arguments=Arguments([0, 0, 0])),
+            LightCommandRamp(arguments=Arguments([170, 100, 40, 20]))
+        ])
+        m1.compress(options={'epsilon': 0})
+        self.assertEqual(m1, m2)
+
+    def test_compress_ramp_2(self):
+        m1 = LightSequenceMain(objects=[
             LightCommandRamp(arguments=Arguments([0, 0, 0, 5])),
             LightCommandRamp(arguments=Arguments([85, 0, 0, 10])),
             LightCommandRamp(arguments=Arguments([170, 0, 0, 10])),
@@ -366,20 +379,6 @@ class Test_compress(unittest.TestCase):
             LightCommandRamp(arguments=Arguments([0, 0, 0, 60]))
         ])
         m1.compress(options={'epsilon': 0, 'root': None})
-        self.assertEqual(m1, m2)
-
-    def test_compress_ramp_2(self):
-        m1 = LightSequenceMain(objects=[
-            LightCommandColor(arguments=Arguments([0, 0, 0])),
-            LightCommandRamp(arguments=Arguments([85, 0, 0, 10])),
-            LightCommandRamp(arguments=Arguments([170, 0, 0, 10])),
-            LightCommandRamp(arguments=Arguments([255, 0, 0, 10]))
-        ])
-        m2 = LightSequenceMain(objects=[
-            LightCommandColor(arguments=Arguments([0, 0, 0])),
-            LightCommandRamp(arguments=Arguments([255, 0, 0, 30]))
-        ])
-        m1.compress(options={'epsilon': 0})
         self.assertEqual(m1, m2)
 
 
