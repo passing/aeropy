@@ -1368,13 +1368,13 @@ if __name__ == '__main__':
     group_import_file.add_argument('-number', help='split to number of sequences', dest='number', type=int, default=None)
 
     group_import_png = parser.add_argument_group('png file import')
-    group_import_png.add_argument('-import-png-ramps', help='create ramp commands', dest='import_png_ramps', action='store_true')
+    group_import_png.add_argument('-import-png-ramps', help=argparse.SUPPRESS, dest='import_png_ramps', action='store_true')
 
     group_convert = parser.add_argument_group('labels conversion')
     group_convert.add_argument('-labels-format', help='labels convertion output format', dest='labels_convert_format', default='audacity', choices=['audacity', 'markers'])
 
     group_labels = parser.add_argument_group('labels import')
-    group_labels.add_argument('-labels', help='labels file', dest='labels_files', nargs="+", metavar='FILE')
+    group_labels.add_argument('-labels', help='labels file(s)', dest='labels_files', nargs="+", metavar='FILE')
 
     group_output = parser.add_argument_group('glo file export')
     group_output.add_argument('-print', help='print sequences', dest='print', action='store_true')

@@ -63,15 +63,15 @@ end
 
 arguments:
 ```
--import-png FILE [-import-png-ramps]
+-import-png FILE
 ```
 
-Import a png file (that has no alpha channel).  
+Import a png file.
+The file must not have transparency (an alpha channel).  
 A sequence is created from each row of the image. Each pixel in that row sets the color for a hundredth second.
 E.g. an image with width = 500 and height = 3 will result in 3 sequences of 5 seconds.
 
-The `-import-png-ramps` option results in `ramp` commands to be created instead of `color` and `delay` commands.
-That is useful for importing images with smooth transitions in combination with the `-compress` option.
+It is recommended to use the `-compress` option to convert smooth color transitions to ramps and repeated commands to subsequences.
 
 ### align sequences to audacity labels
 
