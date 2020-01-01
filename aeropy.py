@@ -417,7 +417,7 @@ class LightCommandRamp(LightCommandColor):
         duration = self.get_duration()
         colors = []
         for n in range(duration):
-            colors.append(round(color_pre * (1 - ((n + 1) / duration)) + color * ((n + 1) / duration)))
+            colors.append(round(color_pre * (1 - (n / duration)) + color * (n / duration)))
         return colors, color
 
     def _resolve_unsupported(self):
@@ -985,6 +985,51 @@ class GloList(list):
                     else:
                         self[n].merge(glo)
 
+    def _color_row_to_colors(self, row):
+        o = []
+
+        color_pre = None
+        delay_repeat = 0
+
+        for i in range(0, len(row), 3):
+            color = tuple(row[i: i + 3])
+
+            if color == color_pre:
+                o.pop()
+                delay_repeat += 1
+            else:
+                o.append(LightCommandColor(arguments=Arguments(color)))
+                delay_repeat = 1
+            o.append(LightCommandDelay(arguments=Arguments([delay_repeat])))
+
+            color_pre = color
+
+        return o
+
+    def _color_row_to_ramps(self, row):
+        o = []
+
+        color_pre = None
+        delay_repeat = 0
+
+        for i in range(0, len(row), 3):
+            color = tuple(row[i: i + 3])
+
+            if i == 0:
+                o.append(LightCommandColor(arguments=Arguments(color)))
+            if color == color_pre:
+                if delay_repeat > 0:
+                    o.pop()
+                delay_repeat += 1
+                o.append(LightCommandRamp(arguments=Arguments(color + (delay_repeat,))))
+            else:
+                delay_repeat = 0
+                o.append(LightCommandRamp(arguments=Arguments(color + (1,))))
+
+            color_pre = color
+
+        return o
+
     def import_png(self, filename, ramps):
         print(f'importing png: {filename}')
 
@@ -997,37 +1042,13 @@ class GloList(list):
         i = 1
 
         for row in rows:
-            sub_name = "image_{}_{:02}".format(filename.replace('.','_'), i)
+            sub_name = "image_{}_{:02}".format(filename.replace('.', '_'), i)
             i += 1
-            o = []
 
-            color_pre = None
-            delay_repeat = 0
-
-            for c in range(width):
-                color = (row[c * 3], row[c * 3 + 1], row[c * 3 + 2])
-
-                if ramps:
-                    if c == 0:
-                        o.append(LightCommandColor(arguments=Arguments(color)))
-                    if color == color_pre:
-                        if delay_repeat > 0:
-                            o.pop()
-                        delay_repeat += 1
-                        o.append(LightCommandRamp(arguments=Arguments(color + (delay_repeat,))))
-                    else:
-                        delay_repeat = 0
-                        o.append(LightCommandRamp(arguments=Arguments(color + (1,))))
-                else:
-                    if color == color_pre:
-                        o.pop()
-                        delay_repeat += 1
-                    else:
-                        o.append(LightCommandColor(arguments=Arguments(color)))
-                        delay_repeat = 1
-                    o.append(LightCommandDelay(arguments=Arguments([delay_repeat])))
-
-                color_pre = color
+            if ramps:
+                o = self._color_row_to_ramps(row)
+            else:
+                o = self._color_row_to_colors(row)
 
             objects = [LightSequenceMain(objects=[LightCommandSub(arguments=Arguments([sub_name]))])]
             objects.append(LightSequenceDefsub(arguments=Arguments([sub_name]), objects=o))

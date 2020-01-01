@@ -159,7 +159,7 @@ class TestLightObject(unittest.TestCase):
         r = LightCommandRamp(arguments=Arguments([110, 120, 130, 4]), noop=" ; comment")
         self.assertEqual(r.get_duration(), 4)
         self.assertEqual(r.export(), "ramp (110, 120, 130, 4) ; comment")
-        self.assertEqual(r._render_connected(self.color_pre, None), ([Color(35, 45, 55), Color(60, 70, 80), Color(85, 95, 105), Color(110, 120, 130)], Color(110, 120, 130)))
+        self.assertEqual(r._render_connected(self.color_pre, None), ([Color(10, 20, 30), Color(35, 45, 55), Color(60, 70, 80), Color(85, 95, 105)], Color(110, 120, 130)))
 
     def test_light_object_noop(self):
         n = LightCommandNoop(noop="; comment")
