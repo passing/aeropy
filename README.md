@@ -208,7 +208,7 @@ arguments:
 ```
 
 The `-amplify` option causes color components to be amplified in the rendered image or video (using sqrt function).
-Colors with a low lightness will get brighter, which trying to simulate their actual visual perception.
+Colors with a low lightness will get brighter, which is trying to simulate their actual visual perception.
 
 #### png export
 

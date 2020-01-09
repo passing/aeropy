@@ -1371,7 +1371,7 @@ if __name__ == '__main__':
     group_import_png.add_argument('-import-png-ramps', help=argparse.SUPPRESS, dest='import_png_ramps', action='store_true')
 
     group_convert = parser.add_argument_group('labels conversion')
-    group_convert.add_argument('-labels-format', help='labels convertion output format', dest='labels_convert_format', default='audacity', choices=['audacity', 'markers'])
+    group_convert.add_argument('-labels-format', help='labels conversion output format', dest='labels_convert_format', default='audacity', choices=['audacity', 'markers'])
 
     group_labels = parser.add_argument_group('labels import')
     group_labels.add_argument('-labels', help='labels file(s)', dest='labels_files', nargs="+", metavar='FILE')
