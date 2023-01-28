@@ -1264,7 +1264,7 @@ class GloList(list):
         print(f'writing {filename}: {width} x {height} px')
 
         f = open(filename, 'wb')
-        w = png.Writer(width, height)
+        w = png.Writer(width, height, greyscale=False)
         w.write(f, rows)
         f.close()
 
@@ -1340,7 +1340,7 @@ class GloList(list):
 
         print(f'encoding video: {" ".join(args)}\n')
 
-        w = png.Writer(render_width, render_height)
+        w = png.Writer(render_width, render_height, greyscale=False)
 
         with Popen(args, stdin=PIPE) as pipe:
             for frame in range(frames_end):
