@@ -1404,6 +1404,7 @@ def get_arguments():
 def main():
     args = get_arguments()
 
+    global debug
     debug = args.debug
 
     glo_list = GloList()
