@@ -1209,7 +1209,7 @@ class GloList(list):
         for glo in self:
             glo.strip()
 
-    def print_glo(self):
+    def print_glo(self, syntax, indent):
         print('-' * 80)
         for n in range(len(self)):
             glo = self[n]
@@ -1219,7 +1219,7 @@ class GloList(list):
                 duration = 0
             print(f'#{n + 1:02} - duration: {duration/resolution:.2f} seconds')
             print('-' * 80)
-            print(glo.export(syntax=args.syntax, indent=args.indent))
+            print(glo.export(syntax=syntax, indent=indent))
             print('-' * 80)
 
     def export_glo(self, basename, syntax, indent):
@@ -1228,7 +1228,7 @@ class GloList(list):
             filename = f'{basename}_{n + 1:02}.glo'
             print(f'writing {filename}: {glo.get_duration()/resolution:.2f} seconds')
             with open(filename, 'w') as f:
-                f.write(glo.export(syntax=args.syntax, indent=args.indent))
+                f.write(glo.export(syntax=syntax, indent=indent))
 
     def render_png(self, filename, resolution, stretch, padding, amplify):
         print(f'exporting png: resolution={resolution}, stretch={stretch}, padding={padding}, amplify={amplify}')
@@ -1354,7 +1354,7 @@ class GloList(list):
 
 ################################################################################
 
-if __name__ == '__main__':
+def get_arguments():
     parser = argparse.ArgumentParser()
 
     group_input = parser.add_mutually_exclusive_group(required=True)
@@ -1403,7 +1403,10 @@ if __name__ == '__main__':
     group_img_vid.add_argument('-video-bar-width', help='width of bars (relative to margin)', dest='video_output_bar_width', type=int, default=4, metavar='WIDTH')
     group_img_vid.add_argument('-video-preset', help='video encoding preset', dest='video_preset', default='ultrafast', choices=['slow', 'medium', 'fast', 'faster', 'veryfast', 'superfast', 'ultrafast'])
 
-    args = parser.parse_args()
+    return parser.parse_args()
+
+def main():
+    args = get_arguments()
 
     debug = args.debug
 
@@ -1445,7 +1448,10 @@ if __name__ == '__main__':
             glo_list.strip()
 
         if args.print:
-            glo_list.print_glo()
+            glo_list.print_glo(
+                syntax=args.syntax,
+                indent=args.indent
+            )
 
         if args.output_file:
             glo_list.export_glo(
@@ -1476,3 +1482,6 @@ if __name__ == '__main__':
                 height=args.video_output_height,
                 preset=args.video_preset
             )
+
+if __name__ == "__main__":
+    main()
