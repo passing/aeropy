@@ -843,11 +843,37 @@ class LightSequenceLoop(LightSequence):
         else:
             return [self]
 
+LightSequenceLoop.valid_objects = (
+    LightCommandNoop,
+    LightCommandColor,
+    LightCommandColorRed,
+    LightCommandColorGreen,
+    LightCommandColorBlue,
+    LightCommandRamp,
+    LightCommandDelay,
+    LightCommandSub,
+    LightCommandTime,
+    LightSequenceLoop
+)
+
 
 class LightSequenceMain(LightSequence):
     name = 'main'
     command_variants_end = {'legacy': 'END', 'default': 'end'}
     valid_arguments = ((),)
+    valid_objects = (
+        LightCommandDefine,
+        LightCommandNoop,
+        LightCommandColor,
+        LightCommandColorRed,
+        LightCommandColorGreen,
+        LightCommandColorBlue,
+        LightCommandRamp,
+        LightCommandDelay,
+        LightCommandSub,
+        LightCommandTime,
+        LightSequenceLoop
+    )
 
 
 class LightSequenceDefsub(LightSequence):
@@ -855,6 +881,18 @@ class LightSequenceDefsub(LightSequence):
     command_variants = {'legacy': 'DEFSUB', 'default': 'defsub', 'camel': 'defSub'}
     command_variants_end = {'legacy': 'ENDSUB', 'default': 'endsub', 'camel': 'endSub'}
     valid_arguments = ((str,),)
+    valid_objects = (
+        LightCommandNoop,
+        LightCommandColor,
+        LightCommandColorRed,
+        LightCommandColorGreen,
+        LightCommandColorBlue,
+        LightCommandRamp,
+        LightCommandDelay,
+        LightCommandSub,
+        LightCommandTime,
+        LightSequenceLoop
+    )
     level_add = 1
 
     def get_name(self):
@@ -868,6 +906,11 @@ class LightSequenceDefsub(LightSequence):
 class LightSequenceFile(LightSequence):
     name = 'file'
     valid_arguments = ((),)
+    valid_objects = (
+        LightCommandNoop,
+        LightSequenceMain,
+        LightSequenceDefsub
+    )
 
     def get_main(self):
         for object in self:
@@ -910,53 +953,6 @@ class LightSequenceFile(LightSequence):
     def merge(self, other):
         self.get_main().extend(list(other.get_main()))
         self.extend(list(filter(lambda o: not isinstance(o, LightSequenceMain), list(other))))
-
-
-LightSequenceFile.valid_objects = (
-    LightCommandNoop,
-    LightSequenceMain,
-    LightSequenceDefsub
-)
-
-LightSequenceMain.valid_objects = (
-    LightCommandDefine,
-    LightCommandNoop,
-    LightCommandColor,
-    LightCommandColorRed,
-    LightCommandColorGreen,
-    LightCommandColorBlue,
-    LightCommandRamp,
-    LightCommandDelay,
-    LightCommandSub,
-    LightCommandTime,
-    LightSequenceLoop
-)
-
-LightSequenceLoop.valid_objects = (
-    LightCommandNoop,
-    LightCommandColor,
-    LightCommandColorRed,
-    LightCommandColorGreen,
-    LightCommandColorBlue,
-    LightCommandRamp,
-    LightCommandDelay,
-    LightCommandSub,
-    LightCommandTime,
-    LightSequenceLoop
-)
-
-LightSequenceDefsub.valid_objects = (
-    LightCommandNoop,
-    LightCommandColor,
-    LightCommandColorRed,
-    LightCommandColorGreen,
-    LightCommandColorBlue,
-    LightCommandRamp,
-    LightCommandDelay,
-    LightCommandSub,
-    LightCommandTime,
-    LightSequenceLoop
-)
 
 
 class GloList(list):
